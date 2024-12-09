@@ -103,7 +103,7 @@ readr::write_tsv(readAssignments(countData), "read_assignments.txt")
 
 bam files can be easily substeed using this read ids using the following code on linux
 
-```{bash}
+```{bash, eval = FALSE}
 samtools view -N read_assignments.txt -o filtered_output.bam output.bam
 ```
 
