@@ -41,9 +41,15 @@ First, a database of 5'-3' isoforms is created based on the reference annotation
 
 
 ```
-annot_path <- system.file("exdata/dm6.annot.gtf.gz", package="LATER")
-refAnnotation <- rtracklayer::import.gff(annot_path)
-linksDatabase <- prepareLinkDatabase(refAnnotation, tss.window=50, tes.window=150)
+ref_path <- system.file("exdata/dmel_reference_annotation.gtf.gz", 
+                        package = 'LATER')
+reference_annotation <- rtracklayer::import.gff(ref_path)
+protein_coding_exons <- reference_annotation[reference_annotation$type == "exon" & reference_annotation$gene_biotype == "protein_coding"]
+protein_coding_genes <- reference_annotation[reference_annotation$type == "gene" & reference_annotation$gene_biotype == "protein_coding"]
+# Prepare isoformData object 
+isoformData <- prepareIsoformDatabase(protein_coding_exons, 
+                                        tss.window = 50, 
+                                        tes.window = 150)
 ```
 
 ### Counting links 
@@ -52,37 +58,27 @@ To account for accurate quantification we develop a counter for long read sequen
 
 ```
 bamPath <- system.file("exdata/testBam.bam", package = 'LATER')
-countData <- countLinks(bamPath, linksDatabase)
+countData <- countLinks(bamPath, isoformData)
 ```
 
 
-### Estimating promoter dominance 
+### Estimating promoter dominance and Transcriptional biases 
 
 Promoter dominance estimates are calculated as perfomed in (Alfonso-Gonzalez, et al., 2022). This function outputs per promoter biases in expression of a given 3'end of the gene. 
+Transcriptional biases are calculated by estimating using the joint frequencies of TSS-PA site combinations per gene. Coupling events per gene are estimated using multinomial testing using chi-square. Statistical testing is also available with `fisher.test()` using method="fisher".  
 
 ```
-promoterContributionEstimates <- calculatePromoterDominance(countData, linksDatabase$pairsDatabase)
-```
-
-
-### Estimating transcriptional biases 
-
-Transcriptional biases are calculated by estimating using the joint frequencies of TSS-PA site combinations per gene. Coupling events per gene are estimated using multinomial testing using chi-square. Statistical testing is also available with `fisher.test()` using method="fisher". 
-
-```
-biasGenes <- estimateTranscriptionalBias(countData, linksDatabase$pairsDatabase, method="fisher")
+gene_bias_estimates <- estimatePromoterDominance(countData, isoformData, method="fisher")
 ```
 # Release 
 
-Initial Release 0.1.0
+Release 0.1.2.1
 
-Release date: 20th Dec 2022
-This release corresponds to the LATER version used by Alfonso-Gonzalez et al. manuscript
+Release date: 9th Dec 2024
 
 ## Contact
 
 Developer Carlos Alfonso-Gonzalez. For questions or feedback you can contact:
-
 alfonso@ie-freiburg.mpg.de
 
 
